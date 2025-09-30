@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语词汇消消乐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-title {
+            color: white;
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        .game-info {
+            color: white;
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .player-info {
+            background: rgba(255,255,255,0.1);
+            padding: clamp(15px, 4vw, 20px);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .player-name-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-name-section label {
+            color: white;
+            font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+            font-weight: bold;
+        }
+
+        .player-name-section input {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+            background: white;
+            color: #333;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .player-name-section input:focus {
+            outline: 2px solid #ffa500;
+            outline-offset: 2px;
+        }
+
+        .timer {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            max-width: 1000px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1rem, 3.5vw, 1.6rem);
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            user-select: none;
+            line-height: 1.2;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+        }
+
+        .card.flipped {
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            color: white;
+        }
+
+        .card.matched {
+            opacity: 0;
+            transform: scale(0);
+            pointer-events: none;
+        }
+
+        .card-cover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-image: url('https://youke1.picui.cn/s1/2025/09/30/68db6ba0c3d70.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .card-cover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://youke1.picui.cn/s1/2025/09/30/68db6ba0c3d70.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 15px;
+            z-index: -1;
+        }
+
+        .card-content {
+            display: none;
+            font-size: inherit;
+            line-height: inherit;
+            word-wrap: break-word;
+            hyphens: auto;
+            max-width: 100%;
+            overflow-wrap: break-word;
+        }
+
+        .card.flipped .card-cover {
+            display: none;
+        }
+
+        .card.flipped .card-content {
+            display: block;
+        }
+
+        .score-board {
+            background: rgba(255,255,255,0.9);
+            padding: clamp(15px, 4vw, 20px);
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .score {
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .moves {
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .timer {
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            color: white;
+            border: none;
+            padding: clamp(16px, 4vw, 20px) clamp(32px, 8vw, 40px);
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            line-height: 1.2;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(30,30,30,0.95));
+            color: white;
+            padding: clamp(30px, 6vw, 40px);
+            border-radius: 20px;
+            text-align: center;
+            font-size: clamp(1.5rem, 6vw, 2.5rem);
+            display: none;
+            z-index: 1000;
+            line-height: 1.4;
+            max-width: 90vw;
+            min-width: 300px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            animation: celebrationPop 0.5s ease-out;
+        }
+
+        @keyframes celebrationPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .player-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .player-name-section {
+                width: 100%;
+            }
+            
+            .player-name-section input {
+                width: 100%;
+                max-width: 250px;
+            }
+            
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                max-width: 100%;
+            }
+            
+            .card {
+                padding: 6px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .player-info {
+                padding: 12px;
+                gap: 12px;
+            }
+            
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+            
+            .card {
+                padding: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="game-title">🎯 Unit 1 Text A Vocabulary Memory Game</h1>
+    <div class="game-info">Click cards to flip and match English words with Chinese meanings!</div>
+    
+    <!-- 玩家信息区域 -->
+    <div class="player-info">
+        <div class="player-name-section">
+            <label for="playerName">Player Name:</label>
+            <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
+        </div>
+    </div>
+    
+    <div class="score-board">
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="moves">Moves: <span id="moves">0</span></div>
+        <div class="timer" id="timerDisplay">Time: <span id="timer">00:00</span></div>
+    </div>
+
+    <div class="game-board" id="gameBoard">
+        <!-- 卡片将通过JavaScript动态生成 -->
+    </div>
+
+    <button class="reset-btn" onclick="resetGame()">🔄 Restart Game</button>
+
+    <div class="celebration" id="celebration">
+        🎉 Congratulations! 🎉
+    </div>
+
+    <script>
+        // 词汇数据 - 来自教材图片
+        const vocabularyData = [
+            { english: "company", chinese: "公司" },
+            { english: "part-time", chinese: "兼职的" },
+            { english: "programmer", chinese: "程序员，编程员" },
+            { english: "discourage", chinese: "不鼓励，使泄气" },
+            { english: "diploma", chinese: "文凭，毕业证书" },
+            { english: "project", chinese: "项目，课题" },
+            { english: "team spirit", chinese: "团队精神" },
+            { english: "be focused on", chinese: "集中精力于" },
+            { english: "software", chinese: "软件" },
+            { english: "range", chinese: "范围" },
+            { english: "attend", chinese: "参加；出席" },
+            { english: "automatically", chinese: "自动地" },
+            { english: "try out", chinese: "试验，考验" },
+            { english: "ability", chinese: "能力，本领" },
+            { english: "in short", chinese: "简而言之，总之" },
+            { english: "subject", chinese: "科目，课程" },
+            { english: "education", chinese: "教育" },
+            { english: "count", chinese: "有重要意义，有价值" },
+            { english: "hundreds of", chinese: "好几百，许许多多" },
+            { english: "advice", chinese: "忠告，建议" },
+            { english: "drop out of", chinese: "不参与，退出" },
+            { english: "success", chinese: "成功，胜利" },
+            { english: "advantage", chinese: "有利条件；优点，优势" },
+            { english: "take advantage of", chinese: "利用" },
+            { english: "chance of a lifetime", chinese: "千载难逢的良机" }
+        ];
+
+        let gameState = {
+            cards: [],
+            flippedCards: [],
+            matchedPairs: 0,
+            moves: 0,
+            score: 0,
+            isProcessing: false,
+            playerName: '',
+            timerMode: 'countup',
+            timerInterval: null,
+            timeElapsed: 0
+        };
+
+        // 音效系统
+        function createAudioContext() {
+            return new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playCardFlipSound() {
+            const audioContext = createAudioContext();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // 卡片翻开的音效 - 短促的上升音调
+            oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.15);
+        }
+
+        function playMatchSound() {
+            const audioContext = createAudioContext();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // 匹配成功的音效 - 愉快的上升音调
+            oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2); // G5
+            oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.3); // C6
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.4);
+        }
+
+        function playMismatchSound() {
+            const audioContext = createAudioContext();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // 不匹配的音效 - 下降音调
+            oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(300, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function playSuccessSound() {
+            const audioContext = createAudioContext();
+            
+            // 播放胜利音效 - 多音阶上升
+            const notes = [523, 659, 784, 1047, 1319]; // C5, E5, G5, C6, E6
+            let delay = 0;
+            
+            notes.forEach((frequency, index) => {
+                setTimeout(() => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                }, delay);
+                delay += 100;
+            });
+        }
+
+        function playGameStartSound() {
+            const audioContext = createAudioContext();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // 游戏开始音效 - 激励性的音调
+            oscillator.frequency.setValueAtTime(330, audioContext.currentTime); // E4
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime + 0.2); // A4
+            oscillator.frequency.setValueAtTime(554, audioContext.currentTime + 0.4); // C#5
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.6);
+        }
+
+        function playButtonClickSound() {
+            const audioContext = createAudioContext();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // 按钮点击音效 - 短促的确认音
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.05);
+            
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        // 计时器相关函数
+        function startTimer() {
+            gameState.timeElapsed = 0;
+            gameState.timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopTimer() {
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+                gameState.timerInterval = null;
+            }
+        }
+
+        function updateTimer() {
+            gameState.timeElapsed++;
+            const minutes = Math.floor(gameState.timeElapsed / 60);
+            const seconds = gameState.timeElapsed % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // 初始化游戏
+        function initGame() {
+            gameState.cards = [];
+            gameState.flippedCards = [];
+            gameState.matchedPairs = 0;
+            gameState.moves = 0;
+            gameState.score = 0;
+            gameState.isProcessing = false;
+            gameState.timeElapsed = 0;
+            
+            // 停止之前的计时器并重新开始
+            stopTimer();
+            startTimer();
+            
+            // 播放游戏开始音效
+            setTimeout(() => {
+                playGameStartSound();
+            }, 500);
+
+            // 创建卡片数据
+            const allCards = [];
+            
+            // 添加英语单词卡片
+            vocabularyData.forEach((item, index) => {
+                allCards.push({
+                    id: `eng-${index}`,
+                    content: item.english,
+                    type: 'english',
+                    pairId: index,
+                    matched: false
+                });
+            });
+            
+            // 添加中文意思卡片
+            vocabularyData.forEach((item, index) => {
+                allCards.push({
+                    id: `chi-${index}`,
+                    content: item.chinese,
+                    type: 'chinese',
+                    pairId: index,
+                    matched: false
+                });
+            });
+
+            // 随机打乱卡片
+            gameState.cards = shuffleArray(allCards);
+            
+            renderGame();
+        }
+
+        // 随机打乱数组
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 渲染游戏界面
+        function renderGame() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+
+            gameState.cards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                cardElement.dataset.cardId = card.id;
+                cardElement.dataset.pairId = card.pairId;
+                cardElement.dataset.type = card.type;
+                
+                if (card.matched) {
+                    cardElement.classList.add('matched');
+                }
+
+                cardElement.innerHTML = `
+                    <div class="card-cover">?</div>
+                    <div class="card-content">${card.content}</div>
+                `;
+
+                cardElement.addEventListener('click', () => flipCard(index));
+                gameBoard.appendChild(cardElement);
+            });
+
+            updateScore();
+        }
+
+        // 翻开卡片
+        function flipCard(cardIndex) {
+            if (gameState.isProcessing) return;
+            
+            const card = gameState.cards[cardIndex];
+            if (card.matched || gameState.flippedCards.length >= 2) return;
+
+            // 播放卡片翻开音效
+            playCardFlipSound();
+
+            // 翻开卡片
+            const cardElement = document.querySelector(`[data-card-id="${card.id}"]`);
+            cardElement.classList.add('flipped');
+            
+            gameState.flippedCards.push({ index: cardIndex, card: card });
+
+            // 如果翻开了两张卡片，检查是否匹配
+            if (gameState.flippedCards.length === 2) {
+                gameState.moves++;
+                updateScore();
+                checkMatch();
+            }
+        }
+
+        // 检查匹配
+        function checkMatch() {
+            gameState.isProcessing = true;
+            
+            const [card1, card2] = gameState.flippedCards;
+            
+            setTimeout(() => {
+                if (card1.card.pairId === card2.card.pairId && card1.card.type !== card2.card.type) {
+                    // 匹配成功
+                    card1.card.matched = true;
+                    card2.card.matched = true;
+                    gameState.matchedPairs++;
+                    gameState.score += 10;
+                    
+                    // 播放匹配音效
+                    playMatchSound();
+                    
+                    // 卡片消失效果
+                    const card1Element = document.querySelector(`[data-card-id="${card1.card.id}"]`);
+                    const card2Element = document.querySelector(`[data-card-id="${card2.card.id}"]`);
+                    
+                    setTimeout(() => {
+                        card1Element.classList.add('matched');
+                        card2Element.classList.add('matched');
+                    }, 500);
+                    
+                    // 检查是否完成游戏
+                    if (gameState.matchedPairs === vocabularyData.length) {
+                        setTimeout(() => {
+                            playSuccessSound();
+                            stopTimer();
+                            showCelebration();
+                        }, 1000);
+                    }
+                } else {
+                    // 不匹配，播放错误音效并翻回卡片
+                    playMismatchSound();
+                    
+                    const card1Element = document.querySelector(`[data-card-id="${card1.card.id}"]`);
+                    const card2Element = document.querySelector(`[data-card-id="${card2.card.id}"]`);
+                    
+                    card1Element.classList.remove('flipped');
+                    card2Element.classList.remove('flipped');
+                }
+                
+                gameState.flippedCards = [];
+                gameState.isProcessing = false;
+                updateScore();
+            }, 1000);
+        }
+
+        // 更新分数
+        function updateScore() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('moves').textContent = gameState.moves;
+        }
+
+        // 显示庆祝动画
+        function showCelebration() {
+            const playerName = gameState.playerName || 'Player';
+            const minutes = Math.floor(gameState.timeElapsed / 60);
+            const seconds = gameState.timeElapsed % 60;
+            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            const celebration = document.getElementById('celebration');
+            celebration.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 1.2em; margin-bottom: 20px;">🎉 Congratulations! 🎉</div>
+                    <div style="font-size: 1.1em; margin-bottom: 15px; color: #ffa500;">Player: ${playerName}</div>
+                    <div style="font-size: 1em; margin-bottom: 10px;">Final Score: <span style="color: #4CAF50; font-weight: bold;">${gameState.score}</span></div>
+                    <div style="font-size: 1em; margin-bottom: 10px;">Total Moves: <span style="color: #2196F3; font-weight: bold;">${gameState.moves}</span></div>
+                    <div style="font-size: 1em; margin-bottom: 20px;">Time Used: <span style="color: #FF9800; font-weight: bold;">${timeString}</span></div>
+                    <button onclick="resetGame(); this.closest('.celebration').style.display='none';" 
+                            style="background: linear-gradient(45deg, #ff6b6b, #ffa500); 
+                                   color: white; 
+                                   border: none; 
+                                   padding: 12px 24px; 
+                                   border-radius: 25px; 
+                                   font-size: 1em; 
+                                   font-weight: bold; 
+                                   cursor: pointer; 
+                                   margin: 10px;
+                                   box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                                   transition: all 0.3s ease;">
+                        🔄 Play Again
+                    </button>
+                    <div style="font-size: 0.9em; color: #888; margin-top: 15px;">Click outside to close</div>
+                </div>
+            `;
+            celebration.style.display = 'block';
+            
+            // 点击关闭功能
+            celebration.onclick = function(event) {
+                if (event.target === celebration) {
+                    celebration.style.display = 'none';
+                }
+            };
+        }
+
+        // 重置游戏
+        function resetGame() {
+            playButtonClickSound();
+            initGame();
+        }
+
+        // 检查图片是否加载成功
+        function checkImageLoad() {
+            const img = new Image();
+            img.onload = function() {
+                console.log('图片1.png加载成功');
+                // 更新所有卡片封面
+                document.querySelectorAll('.card-cover').forEach(cover => {
+                    cover.style.backgroundImage = 'url(https://youke1.picui.cn/s1/2025/09/30/68db6ba0c3d70.png)';
+                });
+            };
+            img.onerror = function() {
+                console.log('图片1.png加载失败，使用备用样式');
+            };
+            img.src = 'https://youke1.picui.cn/s1/2025/09/30/68db6ba0c3d70.png';
+        }
+
+        // 页面加载完成后初始化游戏
+        document.addEventListener('DOMContentLoaded', function() {
+            initGame();
+            checkImageLoad();
+            
+            // 添加玩家姓名输入监听
+            document.getElementById('playerName').addEventListener('input', function() {
+                gameState.playerName = this.value.trim();
+            });
+            
+            // 为输入框添加焦点音效
+            document.getElementById('playerName').addEventListener('focus', function() {
+                playButtonClickSound();
+            });
+        });
+    </script>
+</body>
+</html>
